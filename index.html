@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html>
+ <head>
+<title>مراجعة الأمن السيبراني</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;800;900&family=Tajawal:wght@400;500;700&display=swap');
+
+  :root{
+    --bg:#f2f6fb;
+    --surface:#ffffff;
+    --surface-2:#eaf1fa;
+    --surface-3:#dde9f6;
+    --text:#101a2b;
+    --text-dim:#51617a;
+    --accent:#0f7a82;
+    --accent-strong:#0a5a60;
+    --accent-2:#2b5bb0;
+    --danger:#c53d3d;
+    --danger-bg:#fdeaea;
+    --warn:#a8710c;
+    --warn-bg:#fdf1dc;
+    --safe:#1f8f5f;
+    --safe-bg:#e7f7ef;
+    --border:#d7e1ee;
+    --shadow:0 14px 34px -16px rgba(16,24,38,.28);
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a1420; --surface:#111e2f; --surface-2:#17273c; --surface-3:#1e3049;
+      --text:#eaf2fb; --text-dim:#9db0c8;
+      --accent:#2fe3d3; --accent-strong:#8ff5ea; --accent-2:#6ea8ff;
+      --danger:#ff8484; --danger-bg:#3a1a1e;
+      --warn:#f5c451; --warn-bg:#392c12;
+      --safe:#63e6a6; --safe-bg:#0f3527;
+      --border:#25384f; --shadow:0 14px 34px -16px rgba(0,0,0,.6);
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a1420; --surface:#111e2f; --surface-2:#17273c; --surface-3:#1e3049;
+    --text:#eaf2fb; --text-dim:#9db0c8;
+    --accent:#2fe3d3; --accent-strong:#8ff5ea; --accent-2:#6ea8ff;
+    --danger:#ff8484; --danger-bg:#3a1a1e;
+    --warn:#f5c451; --warn-bg:#392c12;
+    --safe:#63e6a6; --safe-bg:#0f3527;
+    --border:#25384f; --shadow:0 14px 34px -16px rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+
+  *{box-sizing:border-box;}
+  [hidden]{ display:none !important; }
+  body{ background:var(--bg); }
+  #app{
+    min-height:100dvh;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+    display:flex; flex-direction:column;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.font-display{ font-family:'Cairo','Tajawal',sans-serif; text-wrap:balance; }
+  button{ font-family:inherit; }
+
+  /* ---------- header ---------- */
+  .topbar{
+    position:sticky; top:env(safe-area-inset-top,0px); z-index:30;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:10px clamp(14px,3vw,28px);
+    background:color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+  }
+  .brand{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .brand .mark{ font-size:1.4rem; }
+  .brand .txt{ display:flex; flex-direction:column; line-height:1.15; min-width:0; }
+  .brand .txt b{ font-size:clamp(.95rem,1.6vw,1.15rem); font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .brand .txt span{ font-size:.78rem; color:var(--text-dim); white-space:nowrap; }
+  .controls{ display:flex; align-items:center; gap:6px; flex-shrink:0; }
+  .icon-btn{
+    width:40px; height:40px; border-radius:12px; border:1px solid var(--border);
+    background:var(--surface-2); color:var(--text); font-size:1.05rem; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:transform .12s ease, background .12s ease;
+  }
+  .icon-btn:hover{ background:var(--surface-3); transform:translateY(-2px); }
+  .icon-btn:active{ transform:translateY(0); }
+  .progress-track{ height:4px; background:var(--surface-3); position:sticky; top:calc(env(safe-area-inset-top,0px) + 60px); z-index:29; }
+  .progress-fill{ height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); width:0%; transition:width .25s ease; }
+
+  /* ---------- scoreboard ---------- */
+  .scoreboard{
+    position:fixed; top:calc(env(safe-area-inset-top,0px) + 68px); inset-inline-start:14px; z-index:40;
+    background:var(--surface); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow);
+    padding:14px; width:230px; display:flex; flex-direction:column; gap:10px;
+  }
+  .score-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-weight:700; font-size:.95rem; }
+  .score-ctrl{ display:flex; align-items:center; gap:6px; font-family:'Cairo',sans-serif; }
+  .score-ctrl button{ width:26px; height:26px; border-radius:8px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); cursor:pointer; font-weight:800; }
+  .score-ctrl span{ min-width:22px; text-align:center; font-weight:900; font-size:1.05rem; font-variant-numeric:tabular-nums; }
+  .score-reset{ align-self:stretch; text-align:center; padding:6px; border-radius:10px; border:1px dashed var(--border); background:transparent; color:var(--text-dim); font-size:.8rem; cursor:pointer; }
+
+  /* ---------- deck ---------- */
+  .deck{ flex:1; position:relative; }
+  .slide{
+    display:none; position:absolute; inset:0; overflow-y:auto;
+    padding:clamp(20px,4vw,48px) clamp(16px,5vw,64px) 100px;
+  }
+  .slide.active{ display:flex; flex-direction:column; align-items:center; animation:fadein .35s ease; }
+  @keyframes fadein{ from{ opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  @media (prefers-reduced-motion: reduce){ .slide.active{ animation:none; } }
+  .slide-inner{ width:100%; max-width:980px; margin:auto; display:flex; flex-direction:column; gap:20px; align-items:stretch; }
+
+  .eyebrow{ font-size:clamp(.85rem,1vw,1rem); font-weight:800; letter-spacing:.04em; color:var(--accent-strong); text-transform:none; }
+  h1.slide-title{ font-size:clamp(2rem,4.6vw,3.1rem); font-weight:900; margin:0; }
+  h2.slide-title{ font-size:clamp(1.5rem,3vw,2.15rem); font-weight:800; margin:0; }
+  p.lede{ font-size:clamp(1.1rem,1.7vw,1.35rem); color:var(--text-dim); line-height:1.7; margin:0; }
+  .body-text{ font-size:clamp(1.1rem,1.6vw,1.35rem); line-height:1.85; }
+
+  /* ---------- section divider ---------- */
+  .divider .num{
+    font-family:'Cairo',sans-serif; font-weight:900; font-size:clamp(4rem,10vw,7rem);
+    background:linear-gradient(135deg,var(--accent),var(--accent-2)); -webkit-background-clip:text; background-clip:text; color:transparent;
+    line-height:1;
+  }
+  .chips-row{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; }
+  .chip{ background:var(--surface-2); border:1px solid var(--border); border-radius:999px; padding:8px 16px; font-size:1rem; font-weight:700; }
+
+  /* ---------- key term / tip boxes ---------- */
+  .term-box{
+    background:var(--surface); border:1px solid var(--border); border-inline-start:7px solid var(--accent);
+    border-radius:16px; padding:22px clamp(16px,3vw,28px); box-shadow:var(--shadow);
+    font-size:clamp(1.1rem,1.7vw,1.35rem); line-height:1.85;
+  }
+  .term-box b.term{ font-family:'Cairo',sans-serif; font-weight:800; color:var(--accent-strong); }
+  .tip-box{ background:var(--warn-bg); border:1px solid var(--border); border-inline-start:7px solid var(--warn); border-radius:16px; padding:18px 22px; font-size:clamp(1rem,1.5vw,1.2rem); line-height:1.75; }
+  .safe-box{ background:var(--safe-bg); border-inline-start:7px solid var(--safe); border-radius:16px; padding:18px 22px; font-size:clamp(1rem,1.5vw,1.2rem); line-height:1.75; border:1px solid var(--border); }
+
+  /* ---------- concept map ---------- */
+  .cmap{ display:flex; flex-direction:column; align-items:center; gap:0; margin-top:4px; }
+  .cmap-root{
+    font-family:'Cairo',sans-serif; background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#04211f;
+    font-weight:800; padding:14px 30px; border-radius:999px; font-size:clamp(1.05rem,2.2vw,1.4rem);
+    box-shadow:var(--shadow); position:relative; z-index:2; text-align:center;
+  }
+  
+  .cmap-branch{
+    background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px 18px;
+    min-width:150px; max-width:270px; flex:1 1 200px; box-shadow:var(--shadow); cursor:pointer;
+    transition:transform .15s ease; text-align:start;
+  }
+  .cmap-branch:hover, .cmap-branch:focus-visible{ transform:translateY(-4px); }
+  .cmap-branch:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .cmap-branch .icon{ font-size:1.3rem; }
+  .cmap-branch b{ display:block; font-size:1.05rem; margin-top:4px; }
+  .cmap-branch small{ color:var(--text-dim); font-weight:600; }
+  .cmap-branch .detail{ display:none; margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); font-size:.95rem; color:var(--text-dim); line-height:1.6; }
+  .cmap-branch.open .detail{ display:block; }
+  .cmap-branch.danger{ border-color:var(--danger); }
+  .cmap-branch.danger b{ color:var(--danger); }
+  .hint{ font-size:.85rem; color:var(--text-dim); text-align:center; }
+
+  /* ---------- triangle (CIA) ---------- */
+  .triad-wrap{ position:relative; width:min(560px,100%); aspect-ratio:1/0.9; margin:6px auto 0; }
+  .triad-shape{ position:absolute; inset:10% 8% 2%; clip-path:polygon(50% 0%,4% 100%,96% 100%); background:linear-gradient(160deg,var(--accent),var(--accent-2)); opacity:.16; border-radius:14px; }
+  .triad-node{ position:absolute; background:var(--surface); border:2px solid var(--accent); border-radius:18px; padding:12px 14px; width:clamp(130px,30vw,190px); text-align:center; cursor:pointer; box-shadow:var(--shadow); }
+  .triad-node.top{ top:0; left:50%; transform:translateX(-50%); }
+  .triad-node.bl{ bottom:0; left:0; }
+  .triad-node.br{ bottom:0; right:0; }
+  .triad-node b{ display:block; font-family:'Cairo',sans-serif; font-size:1.02rem; }
+  .triad-node small{ color:var(--text-dim); }
+  .triad-node .detail{ display:none; margin-top:8px; font-size:.85rem; color:var(--text-dim); line-height:1.5; border-top:1px dashed var(--border); padding-top:8px; }
+  .triad-node.open .detail{ display:block; }
+
+  /* ---------- compare ---------- */
+  .compare{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:640px){ .compare{ grid-template-columns:1fr; } }
+  .compare-card{ background:var(--surface); border:1px solid var(--border); border-top:6px solid var(--accent); border-radius:16px; padding:20px; box-shadow:var(--shadow); font-size:1.05rem; line-height:1.7; }
+  .compare-card.alt{ border-top-color:var(--danger); }
+  .compare-card b.term{ font-family:'Cairo',sans-serif; display:block; margin-bottom:8px; font-size:1.15rem; }
+
+  /* ---------- badges strip ---------- */
+  .badges{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
+  .badge{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px 18px; text-align:center; box-shadow:var(--shadow); min-width:120px; }
+  .badge b{ display:block; font-family:'Cairo',sans-serif; font-size:1rem; }
+  .badge span{ font-size:.82rem; color:var(--text-dim); }
+
+  /* ---------- step flow ---------- */
+  .flow{ display:flex; flex-wrap:wrap; gap:14px; justify-content:center; align-items:stretch; }
+  .flow-step{ background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:20px; width:220px; box-shadow:var(--shadow); }
+  .flow-step .num{ width:38px; height:38px; border-radius:50%; background:var(--accent); color:#04211f; display:flex; align-items:center; justify-content:center; font-weight:800; margin-bottom:10px; font-family:'Cairo',sans-serif; }
+  .flow-step p{ margin:0; font-size:.98rem; line-height:1.6; }
+  .flow-arrow{ align-self:center; font-size:1.6rem; color:var(--text-dim); }
+  @media (max-width:760px){ .flow-arrow{ transform:rotate(90deg); } }
+
+  /* ---------- grid icons ---------- */
+  .icon-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; }
+  .icon-card{ background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px 18px; box-shadow:var(--shadow); display:flex; gap:12px; align-items:flex-start; font-size:1rem; line-height:1.6; }
+  .icon-card .ic{ font-size:1.4rem; }
+
+  /* ---------- warning grid ---------- */
+  .warn-grid{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; }
+  .warn-chip{ background:var(--danger-bg); border:1px solid var(--danger); color:var(--danger); border-radius:12px; padding:10px 16px; font-weight:700; }
+
+  /* ---------- footer nav ---------- */
+  .navbar{
+    position:fixed; bottom:0; inset-inline:0; z-index:30;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:12px clamp(14px,3vw,28px) calc(12px + env(safe-area-inset-bottom,0px));
+    background:color-mix(in srgb, var(--surface) 90%, transparent); backdrop-filter:blur(10px);
+    border-top:1px solid var(--border);
+  }
+  .nav-btn{
+    display:flex; align-items:center; gap:8px; padding:10px 20px; border-radius:14px; border:1px solid var(--border);
+    background:var(--surface-2); color:var(--text); font-weight:800; font-size:1rem; cursor:pointer;
+  }
+  .nav-btn:hover{ background:var(--surface-3); }
+  .nav-btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .nav-btn.primary{ background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#04211f; border:none; }
+  .counter{ font-weight:800; color:var(--text-dim); font-variant-numeric:tabular-nums; font-size:.95rem; }
+
+  /* ---------- quiz ---------- */
+  .quiz-box{ background:var(--surface); border:1px solid var(--border); border-radius:22px; padding:clamp(18px,3vw,32px); box-shadow:var(--shadow); display:flex; flex-direction:column; gap:18px; }
+  .quiz-progress{ font-weight:800; color:var(--text-dim); font-size:.95rem; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+  .quiz-statement{ font-size:clamp(1.2rem,2.2vw,1.6rem); font-weight:700; line-height:1.6; text-align:center; padding:10px 0; }
+  .quiz-actions{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
+  .ans-btn{ font-size:1.15rem; font-weight:800; padding:14px 28px; border-radius:14px; border:2px solid var(--border); background:var(--surface-2); color:var(--text); cursor:pointer; }
+  .ans-btn.true:hover{ border-color:var(--safe); }
+  .ans-btn.false:hover{ border-color:var(--danger); }
+  .ans-btn.correct{ background:var(--safe-bg); border-color:var(--safe); color:var(--safe); }
+  .ans-btn.wrong{ background:var(--danger-bg); border-color:var(--danger); color:var(--danger); }
+  .ans-btn:disabled{ cursor:default; opacity:.85; }
+  .opt-btn{ display:block; width:100%; text-align:start; font-size:1.08rem; font-weight:700; padding:14px 18px; border-radius:14px; border:2px solid var(--border); background:var(--surface-2); color:var(--text); cursor:pointer; }
+  .opt-list{ display:flex; flex-direction:column; gap:10px; }
+  .quiz-feedback{ text-align:center; font-weight:800; font-size:1.05rem; padding:12px; border-radius:12px; }
+  .quiz-feedback.ok{ background:var(--safe-bg); color:var(--safe); }
+  .quiz-feedback.bad{ background:var(--danger-bg); color:var(--danger); }
+  .quiz-feedback .why{ display:block; font-weight:500; color:var(--text-dim); margin-top:6px; font-size:.95rem; }
+  .next-q-btn{ align-self:center; }
+  .quiz-done{ text-align:center; display:flex; flex-direction:column; gap:14px; align-items:center; }
+  .quiz-done .big{ font-family:'Cairo',sans-serif; font-size:2.4rem; font-weight:900; color:var(--accent-strong); }
+
+  .flashcard{ perspective:1200px; height:230px; max-width:560px; width:100%; margin:0 auto; }
+  .flashcard-inner{ position:relative; width:100%; height:100%; transition:transform .5s; transform-style:preserve-3d; }
+  .flashcard.flipped .flashcard-inner{ transform:rotateY(180deg); }
+  @media (prefers-reduced-motion: reduce){ .flashcard-inner{ transition:none; } }
+  .flash-face{ position:absolute; inset:0; backface-visibility:hidden; border-radius:20px; border:1px solid var(--border); box-shadow:var(--shadow); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:26px; gap:10px; }
+  .flash-face.front{ background:var(--surface-2); font-size:1.2rem; line-height:1.6; }
+  .flash-face.back{ background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#04211f; transform:rotateY(180deg); }
+  .flash-face.back b{ font-family:'Cairo',sans-serif; font-size:1.6rem; }
+
+  .win-banner{ font-family:'Cairo',sans-serif; font-size:clamp(1.6rem,3.4vw,2.4rem); font-weight:900; text-align:center; }
+  .score-final{ display:flex; gap:24px; justify-content:center; flex-wrap:wrap; }
+  .score-final .card{ background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:24px 34px; text-align:center; box-shadow:var(--shadow); }
+  .score-final .card .n{ font-family:'Cairo',sans-serif; font-size:3rem; font-weight:900; }
+
+  .links-list{ display:flex; flex-direction:column; gap:10px; }
+  .links-list .l{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 18px; font-size:1rem; }
+  .links-list .l b{ font-family:'Cairo',sans-serif; }
+
+  @media (max-width:520px){
+    .scoreboard{ inset-inline-start:8px; width:190px; padding:10px; }
+  }
+</style>
+</head>
+<body>
+<div id="app" dir="rtl" lang="ar">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark">🛡️</span>
+      <div class="txt">
+        <b id="hdrTitle">مراجعة الأمن السيبراني</b>
+        <span id="hdrSection">الصف الثالث المتوسط</span>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="icon-btn" id="scoreToggle" title="لوحة النقاط">🏆</button>
+      <button class="icon-btn" id="fontDown" title="تصغير الخط">A−</button>
+      <button class="icon-btn" id="fontUp" title="تكبير الخط">A+</button>
+      <button class="icon-btn" id="fullscreenBtn" title="ملء الشاشة">⛶</button>
+    </div>
+  </header>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="scoreboard" id="scoreboard" hidden>
+    <div class="score-row">
+      <span>🔵 الفريق الأزرق</span>
+      <div class="score-ctrl">
+        <button data-team="a" data-d="-1">−</button>
+        <span id="scoreA">0</span>
+        <button data-team="a" data-d="1">+</button>
+      </div>
+    </div>
+    <div class="score-row">
+      <span>🟢 الفريق الأخضر</span>
+      <div class="score-ctrl">
+        <button data-team="b" data-d="-1">−</button>
+        <span id="scoreB">0</span>
+        <button data-team="b" data-d="1">+</button>
+      </div>
+    </div>
+    <button class="score-reset" id="scoreReset">إعادة ضبط النقاط</button>
+  </div>
+
+  <main class="deck" id="deck">
+
+    <!-- 1: TITLE -->
+    <section class="slide" data-title="البداية">
+      <div class="slide-inner" style="text-align:center; gap:26px;">
+        <div style="font-size:clamp(3.5rem,9vw,5.5rem);">🛡️🔐</div>
+        <div class="eyebrow">مراجعة الوحدة الأولى</div>
+        <h1 class="slide-title">الأمن السيبراني</h1>
+        <p class="lede">حصة مراجعة شاملة وتفاعلية — الصف الثالث المتوسط</p>
+        <div class="chips-row">
+          <span class="chip">🧠 المفاهيم الأساسية</span>
+          <span class="chip">💻 حماية الجهاز</span>
+          <span class="chip">🌐 التصفح الآمن</span>
+          <span class="chip">🏆 تحديات ومسابقات</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2: DIVIDER A -->
+    <section class="slide divider" data-title="القسم الأول" data-section="القسم الأول">
+      <div class="slide-inner" style="text-align:center; gap:18px;">
+        <div class="num">١</div>
+        <h1 class="slide-title">مقدمة في الأمن السيبراني</h1>
+        <p class="lede">المفاهيم الأساسية، الجرائم الإلكترونية، الهجمات الشائعة، وطرق الوقاية</p>
+      </div>
+    </section>
+
+    <!-- 3: definition -->
+    <section class="slide" data-title="ما هو الأمن السيبراني؟" data-section="القسم الأول">
+      <div class="slide-inner">
+        <div class="eyebrow">المفهوم الأساسي</div>
+        <h2 class="slide-title">ما هو الأمن السيبراني؟</h2>
+        <div class="term-box">
+          <b class="term">الأمن السيبراني (Cybersecurity)</b>
+          حماية أجهزة الحاسب والشبكات والبرامج والبيانات من الوصول غير المصرح به، والذي قد يهدف إلى الحصول على معلومات حساسة، أو الابتزاز المالي، أو حتى تعطيل عمليات المؤسسة بالكامل.
+        </div>
+        <div class="tip-box">💡 <b>بعبارة أبسط:</b> هو كل الإجراءات التي تحمي معلوماتك وجهازك من أي شخص لا يُفترض أن يصل إليها.</div>
+      </div>
+    </section>
+
+    <!-- 4: importance -->
+    <section class="slide" data-title="أهمية الأمن السيبراني" data-section="القسم الأول">
+      <div class="slide-inner">
+        <div class="eyebrow">لماذا يهمّنا؟</div>
+        <h2 class="slide-title">أهمية الأمن السيبراني</h2>
+        <p class="body-text">تزداد أهمية الأمن السيبراني كلما زاد عدد مستخدمي الإنترنت واعتمادهم المستمر على البيانات المتوفرة على الشبكة دون انقطاع. فكلما زادت قيمة المعلومات، زاد استهدافها من قِبل المهاجمين الذين يسعون للسرقة أو التعطيل.</p>
+        <div class="term-box">
+          <b class="term">التوافر العالي (High Availability)</b>
+          تهدف الأنظمة عالية التوافر إلى إبقاء المعلومات متاحة طوال الوقت، وضمان عدم انقطاع الخدمة بسبب أعطال أو هجمات تستهدف إيقاف الخدمة عن المستخدمين.
+        </div>
+      </div>
+    </section>
+
+    <!-- 5: CIA triad -->
+    <section class="slide" data-title="مثلث الحماية CIA" data-section="القسم الأول">
+      <div class="slide-inner" style="align-items:center; text-align:center;">
+        <div class="eyebrow">خريطة مفاهيمية</div>
+        <h2 class="slide-title">مثلث الحماية CIA</h2>
+        <p class="lede">اضغط على كل ركن لتتعرف على معناه 👇</p>
+        <div class="triad-wrap">
+          <div class="triad-shape"></div>
+          <div class="triad-node top" tabindex="0" role="button">
+            <b>التوافر<br>Availability</b>
+            <div class="detail">ضمان وصول المستخدمين إلى المعلومات في الوقت المناسب دون انقطاع.</div>
+          </div>
+          <div class="triad-node bl" tabindex="0" role="button">
+            <b>السرية<br>Confidentiality</b>
+            <div class="detail">إتاحة البيانات فقط للأشخاص المصرح لهم، عبر كلمات المرور وقوائم الصلاحيات.</div>
+          </div>
+          <div class="triad-node br" tabindex="0" role="button">
+            <b>التكامل<br>Integrity</b>
+            <div class="detail">دقة المعلومات، والتأكد من عدم إمكانية تعديلها إلا من قِبل المخوّلين بذلك.</div>
+          </div>
+        </div>
+        <p class="hint">مثلث CIA يوجّه تصميم سياسات الأمن السيبراني في أي مؤسسة</p>
+      </div>
+    </section>
+
+    <!-- 6: cybercrime def -->
+    <section class="slide" data-title="الجرائم الإلكترونية" data-section="القسم الأول">
+      <div class="slide-inner">
+        <div class="eyebrow">مفهوم</div>
+        <h2 class="slide-title">الجرائم الإلكترونية (Cybercrime)</h2>
+        <div class="term-box">استخدام جهاز الحاسب كأداة لتحقيق غايات غير قانونية، مثل الاحتيال أو التوزيع غير القانوني للمواد المحمية بحقوق الطبع، أو سرقة الهويات، أو انتهاك الخصوصية.</div>
+        <div class="compare">
+          <div class="compare-card">
+            <b class="term">🕵️ جريمة تقليدية</b>
+            تُنفَّذ بأدوات وأساليب مادية مباشرة في الواقع.
+          </div>
+          <div class="compare-card alt">
+            <b class="term">💻 جريمة إلكترونية</b>
+            تُنفَّذ باستخدام أجهزة الحاسب وشبكاتها الرقمية.
+          </div>
+        </div>
+        <p class="hint">قد تتشابه الدوافع (المال، الانتقام) بين النوعين، لكنهما يختلفان في الوسيلة المستخدمة</p>
+      </div>
+    </section>
+
+    <!-- 7: cybercrime types map -->
+    <section class="slide" data-title="أنواع الجرائم الإلكترونية" data-section="القسم الأول">
+      <div class="slide-inner" style="align-items:center;">
+        <div class="eyebrow">خريطة مفاهيمية</div>
+        <h2 class="slide-title" style="text-align:center;">أنواع الجرائم الإلكترونية</h2>
+        <div class="cmap">
+          <div class="cmap-root">الجرائم الإلكترونية</div>
+          <div class="cmap-stem"></div>
+          <div class="cmap-panel">
+            <div class="cmap-branch"><span class="icon">🎣</span><b>الاحتيال الإلكتروني<br><small>Phishing</small></b>
+              <div class="detail">انتحال جهة موثوقة للحصول على معلومات حساسة كأرقام الحسابات وكلمات المرور.</div></div>
+            <div class="cmap-branch"><span class="icon">🪪</span><b>سرقة الهوية<br><small>Identity Theft</small></b>
+              <div class="detail">انتحال شخصية الضحية باستخدام بياناته لإجراء معاملات مالية أو أعمال غير قانونية.</div></div>
+            <div class="cmap-branch"><span class="icon">📩</span><b>المضايقات عبر الإنترنت<br><small>Online Harassment</small></b>
+              <div class="detail">تهديدات ورسائل مسيئة عبر البريد الإلكتروني أو الرسائل الفورية أو وسائل التواصل.</div></div>
+            <div class="cmap-branch"><span class="icon">👣</span><b>الملاحقة الإلكترونية<br><small>Cyberstalking</small></b>
+              <div class="detail">مراقبة نشاط الضحية عبر برامج ضارة، مثل مسجل المفاتيح (Keylogger).</div></div>
+            <div class="cmap-branch"><span class="icon">🔍</span><b>انتهاك الخصوصية<br><small>Invasion of Privacy</small></b>
+              <div class="detail">التطفل على الحياة الشخصية لشخص آخر، مثل اختراق بريده أو مراقبة أنشطته الخاصة.</div></div>
+          </div>
+        </div>
+        <p class="hint">اضغط أي بطاقة لعرض تعريفها</p>
+      </div>
+    </section>
+
+    <!-- 8: breach vs attack -->
+    <section class="slide" data-title="الاختراق الأمني والهجمات" data-section="القسم الأول">
+      <div class="slide-inner">
+        <div class="eyebrow">قارِن بين المصطلحين</div>
+        <h2 class="slide-title">الاختراق الأمني مقابل الهجمات الإلكترونية</h2>
+        <div class="compare">
+          <div class="compare-card">
+            <b class="term">🔓 الاختراق الأمني (Security Breach)</b>
+            تجاوز غير مصرح به لتدابير الحماية للوصول إلى مناطق محمية من النظام — وقد يحدث دون نية سيئة أحيانًا.
+          </div>
+          <div class="compare-card alt">
+            <b class="term">⚡ الهجمات الإلكترونية (Electronic Attacks)</b>
+            أي محاولة وصول غير مصرح به إلى جهاز أو شبكة، بقصد إحداث ضرر دائمًا.
+          </div>
+        </div>
+        <h2 class="slide-title" style="font-size:1.3rem; margin-top:6px;">أشهر حوادث الاختراق حول العالم</h2>
+        <div class="badges">
+          <div class="badge"><b>فيسبوك</b><span>2019 — ملايين السجلات</span></div>
+          <div class="badge"><b>ماريوت الدولية</b><span>2018 — ٥٠٠ مليون عميل</span></div>
+          <div class="badge"><b>+Google</b><span>2018 — كشف بيانات ملايين المستخدمين</span></div>
+          <div class="badge"><b>X (تويتر سابقًا)</b><span>2019 — بيانات عبر تطبيق طرف ثالث</span></div>
+          <div class="badge"><b>أدوبي</b><span>سرقة بيانات بطاقات ائتمان</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9: attack types -->
+    <section class="slide" data-title="أنواع الهجمات الإلكترونية" data-section="القسم الأول">
+      <div class="slide-inner" style="align-items:center;">
+        <div class="eyebrow">خريطة مفاهيمية</div>
+        <h2 class="slide-title" style="text-align:center;">أنواع الهجمات الإلكترونية</h2>
+        <div class="cmap">
+          <div class="cmap-root">الهجمات الإلكترونية</div>
+          <div class="cmap-stem"></div>
+          <div class="cmap-panel">
+            <div class="cmap-branch"><span class="icon">🚫</span><b>حجب الخدمة<br><small>DoS</small></b>
+              <div class="detail">جهاز واحد يُغرق موقعًا أو خادمًا بحركة مرور وهمية، مما يمنع المستخدمين الحقيقيين من الوصول إليه.</div></div>
+            <div class="cmap-branch"><span class="icon">🌐🚫</span><b>حجب الخدمة الموزع<br><small>DDoS</small></b>
+              <div class="detail">نسخة متقدمة تستخدم أجهزة متعددة من مصادر مختلفة، ما يجعل صد الهجوم أصعب بكثير.</div></div>
+            <div class="cmap-branch"><span class="icon">🕶️</span><b>هجوم الوسيط<br><small>MITM</small></b>
+              <div class="detail">يتنصت المهاجم على اتصال بين طرفين متظاهرًا بأنه أحدهما، ليقرأ أو يعدّل البيانات المتبادلة.</div></div>
+            <div class="cmap-branch"><span class="icon">📶</span><b>التنصت على واي فاي<br><small>WiFi Eavesdropping</small></b>
+              <div class="detail">إعداد نقطة وصول واي فاي مزيفة تبدو شرعية، لاعتراض بيانات من يتصل بها.</div></div>
+            <div class="cmap-branch"><span class="icon">🧭</span><b>انتحال النطاقات<br><small>DNS Spoofing</small></b>
+              <div class="detail">تحويل الضحية إلى موقع إلكتروني ضار بدلًا من الموقع المقصود فعليًا.</div></div>
+            <div class="cmap-branch"><span class="icon">✉️</span><b>التصيّد عبر البريد<br><small>Email Phishing</small></b>
+              <div class="detail">تعديل رسائل البريد الإلكتروني أو إضافة مرفقات ضارة لسرقة معلومات حساسة.</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10: prevention -->
+    <section class="slide" data-title="طرق الوقاية من الجرائم الإلكترونية" data-section="القسم الأول">
+      <div class="slide-inner" style="align-items:center;">
+        <div class="eyebrow">خريطة مفاهيمية</div>
+        <h2 class="slide-title" style="text-align:center;">طرق الوقاية من الجرائم الإلكترونية</h2>
+        <div class="cmap">
+          <div class="cmap-root">الوقاية من الجرائم الإلكترونية</div>
+          <div class="cmap-stem"></div>
+          <div class="cmap-panel">
+            <div class="cmap-branch"><span class="icon">🔄</span><b>تحديث البرامج دوريًا</b></div>
+            <div class="cmap-branch"><span class="icon">🛡️</span><b>مضاد فيروسات + جدار حماية</b></div>
+            <div class="cmap-branch"><span class="icon">⚠️</span><b>تواصل رقمي حذر</b></div>
+            <div class="cmap-branch"><span class="icon">🔐</span><b>التحقق الثنائي (MFA)</b></div>
+            <div class="cmap-branch"><span class="icon">🔑</span><b>كلمات مرور قوية + مدير كلمات مرور</b></div>
+            <div class="cmap-branch"><span class="icon">💾</span><b>نسخ احتياطي دوري</b></div>
+            <div class="cmap-branch"><span class="icon">📡</span><b>تجنّب واي فاي العام / VPN</b></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11: DIVIDER B -->
+    <section class="slide divider" data-title="القسم الثاني" data-section="القسم الثاني">
+      <div class="slide-inner" style="text-align:center; gap:18px;">
+        <div class="num">٢</div>
+        <h1 class="slide-title">حماية جهاز الحاسب الشخصي</h1>
+        <p class="lede">البرمجيات الضارة، هجوم الفدية، بيانات المتصفح، والتصفح الآمن</p>
+      </div>
+    </section>
+
+    <!-- 12: malware def -->
+    <section class="slide" data-title="البرمجيات الضارة" data-section="القسم الثاني">
+      <div class="slide-inner">
+        <div class="eyebrow">مفهوم</div>
+        <h2 class="slide-title">البرمجيات الضارة (Malware)</h2>
+        <div class="term-box">برامج يتم تثبيتها على جهاز الحاسب أو الجهاز المحمول دون موافقة المستخدم أو معرفته — كالفيروسات وبرامج التجسس — وقد تُعطّل الجهاز، أو تراقب استخدامه، أو تتحكم به عن بُعد.</div>
+      </div>
+    </section>
+
+    <!-- 13: malware signs -->
+    <section class="slide" data-title="علامات إصابة الجهاز" data-section="القسم الثاني">
+      <div class="slide-inner" style="align-items:center;">
+        <div class="eyebrow">خريطة مفاهيمية</div>
+        <h2 class="slide-title" style="text-align:center;">كيف تكتشف إصابة جهازك؟</h2>
+        <div class="cmap">
+          <div class="cmap-root">علامات الإصابة بالبرمجيات الضارة</div>
+          <div class="cmap-stem"></div>
+          <div class="cmap-panel">
+            <div class="cmap-branch danger"><span class="icon">🐢</span><b>بطء واضح في أداء الجهاز</b></div>
+            <div class="cmap-branch danger"><span class="icon">💥</span><b>أعطال فجائية متكررة</b></div>
+            <div class="cmap-branch danger"><span class="icon">❗</span><b>رسائل خطأ متكررة</b></div>
+            <div class="cmap-branch danger"><span class="icon">🧩</span><b>أدوات أو رموز جديدة غير معروفة</b></div>
+            <div class="cmap-branch danger"><span class="icon">🔀</span><b>تغيّر الصفحة الرئيسية للمتصفح</b></div>
+            <div class="cmap-branch danger"><span class="icon">🔋</span><b>استنزاف سريع للبطارية</b></div>
+            <div class="cmap-branch danger"><span class="icon">📤</span><b>إرسال رسائل لم تكتبها</b></div>
+            <div class="cmap-branch danger"><span class="icon">🪟</span><b>نوافذ منبثقة كثيرة وإعلانات غريبة</b></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14: malware prevention -->
+    <section class="slide" data-title="الوقاية من البرمجيات الضارة" data-section="القسم الثاني">
+      <div class="slide-inner">
+        <div class="eyebrow">إجراءات عملية</div>
+        <h2 class="slide-title">الوقاية من البرمجيات الضارة</h2>
+        <div class="icon-grid">
+          <div class="icon-card"><span class="ic">🛡️</span>تحديث برنامج مكافحة الفيروسات وجدار الحماية باستمرار.</div>
+          <div class="icon-card"><span class="ic">⚙️</span>عدم تغيير إعدادات الأمان الافتراضية للمتصفح.</div>
+          <div class="icon-card"><span class="ic">🚨</span>الانتباه لتحذيرات الأمان التي يعرضها المتصفح.</div>
+          <div class="icon-card"><span class="ic">⌨️</span>كتابة عنوان الموقع يدويًا بدل الضغط على روابط مجهولة.</div>
+          <div class="icon-card"><span class="ic">📎</span>عدم فتح مرفقات البريد الإلكتروني من مصادر غير معروفة.</div>
+          <div class="icon-card"><span class="ic">⬇️</span>تنزيل البرامج المطلوبة من مصدرها الرسمي مباشرة.</div>
+          <div class="icon-card"><span class="ic">🔌</span>فحص وحدات التخزين الخارجية قبل استخدامها.</div>
+          <div class="icon-card"><span class="ic">💾</span>عمل نسخ احتياطي لبياناتك المهمة بانتظام.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15: malware response -->
+    <section class="slide" data-title="عند الاشتباه بالإصابة" data-section="القسم الثاني">
+      <div class="slide-inner" style="align-items:center;">
+        <div class="eyebrow">خطوات عملية</div>
+        <h2 class="slide-title" style="text-align:center;">ماذا أفعل عند الاشتباه بإصابة جهازي؟</h2>
+        <div class="flow">
+          <div class="flow-step"><div class="num">١</div><p>توقّف فورًا عن التسوق الإلكتروني والخدمات المصرفية وأي نشاط حسّاس.</p></div>
+          <div class="flow-arrow">⟵</div>
+          <div class="flow-step"><div class="num">٢</div><p>حدّث برنامج الحماية، وافحص الجهاز بالكامل، ثم أعد التشغيل.</p></div>
+          <div class="flow-arrow">⟵</div>
+          <div class="flow-step"><div class="num">٣</div><p>تحقق من إعدادات المتصفح وأعِدها للوضع الافتراضي إذا لزم الأمر.</p></div>
+          <div class="flow-arrow">⟵</div>
+          <div class="flow-step"><div class="num">٤</div><p>استعن بالدعم الفني للشركة المصنّعة مع الرقم التسلسلي إن استمرت المشكلة.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 16: ransomware -->
+    <section class="slide" data-title="هجوم الفدية" data-section="القسم الثاني">
+      <div class="slide-inner">
+        <div class="eyebrow">تهديد خطير</div>
+        <h2 class="slide-title">هجوم الفدية (Ransomware)</h2>
+        <div class="term-box">برمجية ضارة صُممت لقفل جهاز الحاسب أو منع الوصول إلى ملفاته، مقابل طلب دفع فدية مالية لإلغاء هذا القفل — دون أي ضمان لاسترجاع البيانات فعلًا بعد الدفع.</div>
+        <div class="safe-box">✅ <b>أفضل طريقة للوقاية:</b> النسخ الاحتياطي غير المتصل (Offline) + التحديثات الدورية + التحقق متعدد العوامل (MFA) + تقييد الصلاحيات + برنامج مكافحة فيروسات جيد — فكل إجراء وحده جزء من الحل، وليس الحل الوحيد.</div>
+      </div>
+    </section>
+
+    <!-- 17: data storage -->
+    <section class="slide" data-title="أين تُخزَّن معلوماتك؟" data-section="القسم الثاني">
+      <div class="slide-inner" style="align-items:center;">
+        <div class="eyebrow">خريطة مفاهيمية</div>
+        <h2 class="slide-title" style="text-align:center;">أين تُخزَّن معلوماتك المتداولة عبر الإنترنت؟</h2>
+        <div class="cmap">
+          <div class="cmap-root">المعلومات المتداولة عبر الإنترنت</div>
+          <div class="cmap-stem"></div>
+          <div class="cmap-panel">
+            <div class="cmap-branch"><span class="icon">💽</span><b>القرص الصلب لجهازك</b></div>
+            <div class="cmap-branch"><span class="icon">🖥️</span><b>خادم مزوّد خدمة الإنترنت</b></div>
+            <div class="cmap-branch"><span class="icon">🏛️</span><b>قواعد بيانات حكومية أو خاصة</b></div>
+          </div>
+        </div>
+        <div class="tip-box">💡 التسجيل الرقمي شبه دائم: يصعب حذف أي معلومة تمامًا من الشبكة بعد نشرها.</div>
+      </div>
+    </section>
+
+    <!-- 18: browser data -->
+    <section class="slide" data-title="ماذا يجمع المتصفح عنك؟" data-section="القسم الثاني">
+      <div class="slide-inner" style="align-items:center;">
+        <div class="eyebrow">خريطة مفاهيمية</div>
+        <h2 class="slide-title" style="text-align:center;">بيانات يجمعها متصفحك عنك</h2>
+        <div class="cmap">
+          <div class="cmap-root">بيانات المتصفح</div>
+          <div class="cmap-stem"></div>
+          <div class="cmap-panel">
+            <div class="cmap-branch"><span class="icon">🍪</span><b>ملفات تعريف الارتباط<br><small>Cookies</small></b>
+              <div class="detail">ملفات نصية صغيرة تحفظ تفضيلاتك في المواقع، وتتيح للمواقع التعرف عليك عند العودة إليها.</div></div>
+            <div class="cmap-branch"><span class="icon">🕓</span><b>تاريخ التصفح<br><small>Browsing History</small></b>
+              <div class="detail">سجل بالصفحات التي زرتها، مع عناوينها وأوقات زيارتها.</div></div>
+            <div class="cmap-branch"><span class="icon">🔑</span><b>كلمات المرور المحفوظة<br><small>Saved Passwords</small></b>
+              <div class="detail">بيانات الدخول التي يحفظها المتصفح لتسهيل الدخول للمواقع لاحقًا — يُفضّل عدم تفعيل هذا الحفظ للحسابات الحساسة.</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 19: device protect -->
+    <section class="slide" data-title="حماية جهازك من الهجمات" data-section="القسم الثاني">
+      <div class="slide-inner">
+        <div class="eyebrow">إجراءات عملية على جهازك</div>
+        <h2 class="slide-title">حماية جهاز الحاسب من الهجمات الإلكترونية</h2>
+        <div class="icon-grid">
+          <div class="icon-card"><span class="ic">🧹</span><b>حذف بيانات التصفح</b> دوريًا من إعدادات الخصوصية في المتصفح.</div>
+          <div class="icon-card"><span class="ic">🪟</span><b>تعطيل النوافذ المنبثقة</b> لمنع تحميل برمجيات ضارة كحصان طروادة.</div>
+          <div class="icon-card"><span class="ic">🛡️</span><b>تفعيل Windows Defender SmartScreen</b> لحمايتك من المواقع والملفات الضارة.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 20: social safety -->
+    <section class="slide" data-title="التصفح الآمن لمواقع التواصل" data-section="القسم الثاني">
+      <div class="slide-inner" style="align-items:center;">
+        <div class="eyebrow">خريطة مفاهيمية</div>
+        <h2 class="slide-title" style="text-align:center;">تصفح آمن لمواقع التواصل الاجتماعي</h2>
+        <div class="cmap">
+          <div class="cmap-root">التصفح الآمن</div>
+          <div class="cmap-stem"></div>
+          <div class="cmap-panel">
+            <div class="cmap-branch"><span class="icon">🤐</span><b>الحذر من مشاركة المعلومات</b></div>
+            <div class="cmap-branch"><span class="icon">⚙️</span><b>ضبط إعدادات الخصوصية</b></div>
+            <div class="cmap-branch"><span class="icon">🕵️</span><b>التحقق ممن تتواصل معهم</b></div>
+            <div class="cmap-branch"><span class="icon">👤</span><b>التحقق من حسابك الخاص</b></div>
+            <div class="cmap-branch"><span class="icon">📄</span><b>معرفة سياسة خصوصية الجهة</b></div>
+            <div class="cmap-branch"><span class="icon">🔗</span><b>التحكم بالمشاركة الخارجية</b></div>
+            <div class="cmap-branch"><span class="icon">👥</span><b>الحذر من كثرة "الأصدقاء"</b></div>
+            <div class="cmap-branch"><span class="icon">🚫</span><b>معرفة كيفية حظر المتنمرين</b></div>
+            <div class="cmap-branch"><span class="icon">🔑</span><b>استخدام كلمة مرور قوية</b></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 21: never share -->
+    <section class="slide" data-title="معلومات لا تُشارَك أبدًا" data-section="القسم الثاني">
+      <div class="slide-inner">
+        <div class="eyebrow">تحذير مهم</div>
+        <h2 class="slide-title">معلومات لا تُشاركها أبدًا عبر الإنترنت</h2>
+        <div class="warn-grid">
+          <span class="warn-chip">🪪 رقم الهوية الوطنية</span>
+          <span class="warn-chip">🎂 تاريخ الميلاد الكامل</span>
+          <span class="warn-chip">🛂 جواز السفر</span>
+          <span class="warn-chip">🚗 رخصة القيادة</span>
+          <span class="warn-chip">📄 وثائق التأمين</span>
+          <span class="warn-chip">💳 أرقام بطاقات الائتمان</span>
+          <span class="warn-chip">🔢 الرقم السري PIN</span>
+          <span class="warn-chip">🏦 معلومات الحساب المصرفي</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 22: digital citizenship -->
+    <section class="slide" data-title="المواطنة الرقمية" data-section="القسم الثاني">
+      <div class="slide-inner">
+        <div class="eyebrow">قيم وسلوكيات</div>
+        <h2 class="slide-title">قيم وسلوكيات المواطنة الرقمية</h2>
+        <p class="body-text">كل ما تقوله أو تشاركه على الإنترنت يمثّل قيمك وهويتك — فكّر قبل أن تنشر، لأن ما تنشره قد يُسيء لسمعتك مستقبلًا.</p>
+        <h2 class="slide-title" style="font-size:1.2rem;">تجنّب نشر:</h2>
+        <div class="warn-grid">
+          <span class="warn-chip">🖼️ صور غير لائقة</span>
+          <span class="warn-chip">💬 تعليقات سلبية عن معلم أو صاحب عمل سابق</span>
+          <span class="warn-chip">🚫 تعليقات عنصرية</span>
+          <span class="warn-chip">📜 مؤهلات كاذبة</span>
+          <span class="warn-chip">🔒 معلومات سرية عن جهة عمل سابقة</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 23: DIVIDER C -->
+    <section class="slide divider" data-title="التحدي الكبير" data-section="التحدي الكبير">
+      <div class="slide-inner" style="text-align:center; gap:18px;">
+        <div class="num">🏆</div>
+        <h1 class="slide-title">التحدي الكبير!</h1>
+        <p class="lede">مسابقات وتحديات لمراجعة كل ما تعلمناه</p>
+        <div class="tip-box" style="text-align:start;">قسّموا الصف إلى فريقين 🔵 و 🟢، وكل إجابة صحيحة = نقطة لفريقكم! اضغطوا أيقونة 🏆 أعلى الشاشة لفتح لوحة النقاط أثناء اللعب.</div>
+      </div>
+    </section>
+
+    <!-- 24: TF round -->
+    <section class="slide" data-title="جولة ١: صح أم خطأ" data-section="التحدي الكبير">
+      <div class="slide-inner">
+        <div class="eyebrow">جولة ١</div>
+        <h2 class="slide-title">صح أم خطأ؟</h2>
+        <div class="quiz-box" id="tfBox">
+          <div class="quiz-progress"><span>السؤال <span id="tfIdx">1</span> من <span id="tfTotal">8</span></span><span>النقاط: <span id="tfScore">0</span></span></div>
+          <div class="quiz-statement" id="tfStatement"></div>
+          <div class="quiz-actions" id="tfActions">
+            <button class="ans-btn true" data-ans="true">✅ صح</button>
+            <button class="ans-btn false" data-ans="false">❌ خطأ</button>
+          </div>
+          <div class="quiz-feedback" id="tfFeedback" hidden></div>
+          <button class="nav-btn primary next-q-btn" id="tfNextBtn" hidden>السؤال التالي ⬅</button>
+          <div class="quiz-done" id="tfDone" hidden>
+            <div class="big" id="tfFinal"></div>
+            <button class="nav-btn" id="tfRestart">🔁 أعد الجولة</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 25: MCQ round -->
+    <section class="slide" data-title="جولة ٢: اختر الإجابة الصحيحة" data-section="التحدي الكبير">
+      <div class="slide-inner">
+        <div class="eyebrow">جولة ٢</div>
+        <h2 class="slide-title">اختر الإجابة الصحيحة</h2>
+        <div class="quiz-box" id="mcqBox">
+          <div class="quiz-progress"><span>السؤال <span id="mcqIdx">1</span> من <span id="mcqTotal">5</span></span><span>النقاط: <span id="mcqScore">0</span></span></div>
+          <div class="quiz-statement" id="mcqStatement"></div>
+          <div class="opt-list" id="mcqOptions"></div>
+          <div class="quiz-feedback" id="mcqFeedback" hidden></div>
+          <button class="nav-btn primary next-q-btn" id="mcqNextBtn" hidden>السؤال التالي ⬅</button>
+          <div class="quiz-done" id="mcqDone" hidden>
+            <div class="big" id="mcqFinal"></div>
+            <button class="nav-btn" id="mcqRestart">🔁 أعد الجولة</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 26: flashcards round -->
+    <section class="slide" data-title="جولة ٣: خمّن المصطلح" data-section="التحدي الكبير">
+      <div class="slide-inner" style="align-items:center;">
+        <div class="eyebrow">جولة ٣</div>
+        <h2 class="slide-title" style="text-align:center;">خمّن المصطلح 🧩</h2>
+        <div class="quiz-progress" style="width:100%; max-width:560px;"><span>بطاقة <span id="flashIdx">1</span> من <span id="flashTotal">6</span></span></div>
+        <div class="flashcard" id="flashCard">
+          <div class="flashcard-inner">
+            <div class="flash-face front"><span>🧩 التعريف</span><span id="flashDef" style="font-weight:800;"></span></div>
+            <div class="flash-face back"><span>المصطلح</span><b id="flashTerm"></b></div>
+          </div>
+        </div>
+        <div class="quiz-actions">
+          <button class="nav-btn primary" id="flashFlipBtn">اقلب البطاقة 🔄</button>
+          <button class="nav-btn" id="flashNextBtn">البطاقة التالية ⬅</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 27: final scoreboard -->
+    <section class="slide" data-title="النتيجة النهائية" data-section="التحدي الكبير">
+      <div class="slide-inner" style="align-items:center; text-align:center;">
+        <div class="eyebrow">النتيجة النهائية</div>
+        <h2 class="slide-title">من الفريق الفائز؟ 🎉</h2>
+        <div class="score-final">
+          <div class="card">🔵 الفريق الأزرق<div class="n" id="finalA">0</div></div>
+          <div class="card">🟢 الفريق الأخضر<div class="n" id="finalB">0</div></div>
+        </div>
+        <div class="win-banner" id="winBanner"></div>
+        <div class="safe-box" style="text-align:start; width:100%; max-width:640px;">
+          🌟 <b>ثلاث قواعد ذهبية نتذكرها دائمًا:</b><br>
+          ١) لا تشارك معلوماتك الحساسة مع أي جهة غير موثوقة.<br>
+          ٢) حدّث برامجك وكلمات مرورك باستمرار.<br>
+          ٣) فكّر قبل أن تضغط أي رابط أو تنشر أي شيء.
+        </div>
+      </div>
+    </section>
+
+    <!-- 28: closing -->
+    <section class="slide" data-title="ختام الحصة" data-section="التحدي الكبير">
+      <div class="slide-inner" style="align-items:center; text-align:center;">
+        <div style="font-size:clamp(3rem,7vw,4.5rem);">👏🛡️</div>
+        <h1 class="slide-title">أحسنتم جميعًا!</h1>
+        <p class="lede">أنهينا مراجعة وحدة الأمن السيبراني بنجاح. حافظوا دائمًا على أمانكم الرقمي!</p>
+        <div class="links-list" style="width:100%; max-width:560px;">
+          <div class="l"><b>🔗 attaa.sa</b> — نصائح الأمن السيبراني للاتصال الآمن بالإنترنت</div>
+          <div class="l"><b>🔗 thinktech.sa</b> — التنمر الإلكتروني وطرق تجنبه</div>
+          <div class="l"><b>🔗 nca.gov.sa</b> — الهيئة الوطنية للأمن السيبراني</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="navbar">
+    <button class="nav-btn" id="prevBtn">➡ السابق</button>
+    <span class="counter" id="counterText">1 / 28</span>
+    <button class="nav-btn primary" id="nextBtn">التالي ⬅</button>
+  </nav>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var idx = 0;
+
+  var progressFill = document.getElementById('progressFill');
+  var counterText = document.getElementById('counterText');
+  var hdrTitle = document.getElementById('hdrTitle');
+  var hdrSection = document.getElementById('hdrSection');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+
+  function render(){
+    slides.forEach(function(s,i){ s.classList.toggle('active', i===idx); });
+    var s = slides[idx];
+    hdrTitle.textContent = s.getAttribute('data-title') || 'مراجعة الأمن السيبراني';
+    hdrSection.textContent = s.getAttribute('data-section') || 'الصف الثالث المتوسط';
+    counterText.textContent = (idx+1) + ' / ' + total;
+    progressFill.style.width = (((idx+1)/total)*100) + '%';
+    prevBtn.disabled = idx===0;
+    nextBtn.textContent = (idx===total-1) ? 'إلى البداية 🔁' : 'التالي ⬅';
+    if(s.scrollTop!==undefined) s.scrollTop = 0;
+    if(idx===26){ updateFinalScores(); }
+  }
+
+  function goTo(i){
+    idx = Math.max(0, Math.min(total-1, i));
+    render();
+  }
+  function next(){ if(idx===total-1){ goTo(0); } else { goTo(idx+1); } }
+  function prev(){ goTo(idx-1); }
+
+  prevBtn.addEventListener('click', prev);
+  nextBtn.addEventListener('click', next);
+
+  document.addEventListener('keydown', function(e){
+    var tag = (document.activeElement && document.activeElement.tagName) || '';
+    if(tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if(e.key === 'ArrowLeft'){ next(); }
+    else if(e.key === 'ArrowRight'){ prev(); }
+    else if(e.key === ' '){ e.preventDefault(); next(); }
+    else if(e.key === 'Home'){ goTo(0); }
+    else if(e.key === 'End'){ goTo(total-1); }
+  });
+
+  /* ---------- concept map / triad toggles (delegated) ---------- */
+  document.getElementById('deck').addEventListener('click', function(e){
+    var branch = e.target.closest('.cmap-branch, .triad-node');
+    if(branch){ branch.classList.toggle('open'); }
+  });
+  document.getElementById('deck').addEventListener('keydown', function(e){
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    var branch = e.target.closest('.cmap-branch, .triad-node');
+    if(branch){ e.preventDefault(); branch.classList.toggle('open'); }
+  });
+
+  /* ---------- font size control ---------- */
+  var appEl = document.getElementById('app');
+  var scale = 1;
+  document.getElementById('fontUp').addEventListener('click', function(){
+    scale = Math.min(1.35, scale + 0.08);
+    appEl.style.fontSize = scale + 'em';
+  });
+  document.getElementById('fontDown').addEventListener('click', function(){
+    scale = Math.max(0.8, scale - 0.08);
+    appEl.style.fontSize = scale + 'em';
+  });
+
+  /* ---------- fullscreen ---------- */
+  document.getElementById('fullscreenBtn').addEventListener('click', function(){
+    try{
+      if(!document.fullscreenElement){ document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); }
+      else{ document.exitFullscreen && document.exitFullscreen(); }
+    }catch(err){}
+  });
+
+  /* ---------- scoreboard ---------- */
+  var scoreboard = document.getElementById('scoreboard');
+  var scoreToggle = document.getElementById('scoreToggle');
+  var scoreA = 0, scoreB = 0;
+  var scoreAEl = document.getElementById('scoreA');
+  var scoreBEl = document.getElementById('scoreB');
+  scoreToggle.addEventListener('click', function(){ scoreboard.hidden = !scoreboard.hidden; });
+  scoreboard.addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-team]');
+    if(!btn) return;
+    var d = parseInt(btn.getAttribute('data-d'),10);
+    if(btn.getAttribute('data-team')==='a'){ scoreA = Math.max(0, scoreA+d); scoreAEl.textContent = scoreA; }
+    else { scoreB = Math.max(0, scoreB+d); scoreBEl.textContent = scoreB; }
+  });
+  document.getElementById('scoreReset').addEventListener('click', function(){
+    scoreA=0; scoreB=0; scoreAEl.textContent=0; scoreBEl.textContent=0;
+  });
+  function updateFinalScores(){
+    document.getElementById('finalA').textContent = scoreA;
+    document.getElementById('finalB').textContent = scoreB;
+    var banner = document.getElementById('winBanner');
+    if(scoreA===scoreB){ banner.textContent = '🤝 تعادل رائع بين الفريقين!'; }
+    else if(scoreA>scoreB){ banner.textContent = '🏆 الفريق الأزرق هو الفائز!'; }
+    else { banner.textContent = '🏆 الفريق الأخضر هو الفائز!'; }
+  }
+
+  /* ================= QUIZ DATA ================= */
+  var tfData = [
+    {s:"الأمن السيبراني يشمل جميع الممارسات لحماية المعلومات من الوصول أو الهجمات غير المصرح بها.", a:true, why:"هذا هو التعريف الدقيق لمفهوم الأمن السيبراني."},
+    {s:"مثلث الحماية CIA يهدف فقط إلى حماية كلمات المرور.", a:false, why:"يهدف إلى توازن السرية والتكامل والتوافر معًا، وليس فقط كلمات المرور."},
+    {s:"الجرائم الإلكترونية والتقليدية قد تتشابه في الدافع، لكنها تختلف في الوسيلة.", a:true, why:"صحيح، فكلاهما قد يهدف للمال أو الانتقام، لكن الوسيلة رقمية في الجرائم الإلكترونية."},
+    {s:"هجوم حجب الخدمة الموزع (DDoS) يستخدم جهازًا واحدًا فقط في الهجوم.", a:false, why:"يستخدم أجهزة متعددة من مصادر مختلفة، ما يصعّب صده."},
+    {s:"تحديث البرامج بانتظام يقلل من خطر استغلال الثغرات الأمنية.", a:true, why:"صحيح، فالتحديثات تُغلق الثغرات التي يستغلها المهاجمون."},
+    {s:"يمكن حذف أي معلومة تمامًا من الإنترنت بعد نشرها.", a:false, why:"التسجيل الرقمي شبه دائم، ويصعب حذف المعلومة كليًا بعد نشرها."},
+    {s:"النسخ الاحتياطي غير المتصل (Offline) من أهم وسائل الوقاية من هجمات الفدية.", a:true, why:"صحيح، لأنه يتيح استرجاع البيانات دون الحاجة لدفع الفدية."},
+    {s:"تفعيل التحقق الثنائي (MFA) يجعل حسابك أقل أمانًا.", a:false, why:"على العكس، فهو يزيد الأمان رغم إضافة خطوة تحقق بسيطة."}
+  ];
+  var mcqData = [
+    {q:"إتاحة البيانات فقط للأشخاص المصرح لهم يُعرف بـ:", opts:["السرية","التكامل","التوافر","التنوع"], correct:0, why:"السرية (Confidentiality) تعني إتاحة البيانات فقط للمصرح لهم."},
+    {q:"من أساليب الحفاظ على تكامل البيانات:", opts:["حذف البيانات القديمة","تحديد الأذونات والصلاحيات","استخدام واي فاي عام","تجاهل التحديثات"], correct:1, why:"تحديد الأذونات والصلاحيات (Permissions) من أهم أساليب حماية تكامل البيانات."},
+    {q:"التهديدات عبر البريد الإلكتروني أو الرسائل الفورية أو المشاركات المسيئة على وسائل التواصل تُسمى:", opts:["الاحتيال الإلكتروني","المضايقات عبر الإنترنت","انتهاك الخصوصية","سرقة الهوية"], correct:1, why:"هذا هو تعريف المضايقات عبر الإنترنت (Online Harassment)."},
+    {q:"أي هجوم يقفل ملفاتك ويطلب فدية مالية لفتحها؟", opts:["التصيد الاحتيالي","هجوم الفدية Ransomware","هجوم الوسيط","حجب الخدمة"], correct:1, why:"هجوم الفدية (Ransomware) يمنع الوصول للملفات مقابل فدية."},
+    {q:"أي مما يلي مثال على هجوم الوسيط (MITM)؟", opts:["تحديث نظام التشغيل","إنشاء نسخة احتياطية","انتحال أسماء النطاقات DNS Spoofing","استخدام مدير كلمات مرور"], correct:2, why:"انتحال أسماء النطاقات (DNS Spoofing) أحد أشكال هجوم الوسيط."}
+  ];
+  var flashData = [
+    {def:"انتحال جهة موثوقة للحصول على معلومات حساسة كأرقام الحسابات.", term:"الاحتيال الإلكتروني (Phishing)"},
+    {def:"برنامج صغير يتتبع ضغطات لوحة المفاتيح لسرقة كلمات المرور.", term:"مسجّل المفاتيح (Keylogger)"},
+    {def:"شبكة افتراضية خاصة تُشفّر اتصالك بالإنترنت.", term:"VPN"},
+    {def:"نسخة من بياناتك تُحفظ دوريًا لاسترجاعها عند الحاجة.", term:"النسخ الاحتياطي (Backup)"},
+    {def:"إدخال رمز إضافي بجانب كلمة المرور لتأكيد هويتك.", term:"التحقق الثنائي / متعدد العوامل (MFA)"},
+    {def:"ملفات نصية صغيرة يحفظها المتصفح ليتذكر تفضيلاتك في موقع ما.", term:"ملفات تعريف الارتباط (Cookies)"}
+  ];
+
+  /* ---------- TF round ---------- */
+  (function(){
+    var i=0, score=0;
+    var statementEl = document.getElementById('tfStatement');
+    var actionsEl = document.getElementById('tfActions');
+    var feedbackEl = document.getElementById('tfFeedback');
+    var nextBtnEl = document.getElementById('tfNextBtn');
+    var doneEl = document.getElementById('tfDone');
+    var boxEl = document.getElementById('tfBox');
+    document.getElementById('tfTotal').textContent = tfData.length;
+
+    function renderQ(){
+      var q = tfData[i];
+      document.getElementById('tfIdx').textContent = i+1;
+      document.getElementById('tfScore').textContent = score;
+      statementEl.textContent = q.s;
+      feedbackEl.hidden = true;
+      nextBtnEl.hidden = true;
+      actionsEl.hidden = false;
+      doneEl.hidden = true;
+      boxEl.style.display = '';
+      Array.prototype.forEach.call(actionsEl.querySelectorAll('button'), function(b){
+        b.disabled = false; b.classList.remove('correct','wrong');
+      });
+    }
+    actionsEl.addEventListener('click', function(e){
+      var btn = e.target.closest('button[data-ans]');
+      if(!btn) return;
+      var chosen = btn.getAttribute('data-ans') === 'true';
+      var q = tfData[i];
+      var ok = chosen === q.a;
+      Array.prototype.forEach.call(actionsEl.querySelectorAll('button'), function(b){
+        b.disabled = true;
+        var isTrueBtn = b.getAttribute('data-ans') === 'true';
+        if(isTrueBtn === q.a){ b.classList.add('correct'); }
+        else if(b === btn){ b.classList.add('wrong'); }
+      });
+      if(ok) score++;
+      document.getElementById('tfScore').textContent = score;
+      feedbackEl.hidden = false;
+      feedbackEl.className = 'quiz-feedback ' + (ok ? 'ok':'bad');
+      feedbackEl.innerHTML = (ok ? '✅ إجابة صحيحة!' : '❌ إجابة غير صحيحة') + '<span class="why">'+q.why+'</span>';
+      nextBtnEl.hidden = false;
+    });
+    nextBtnEl.addEventListener('click', function(){
+      i++;
+      if(i >= tfData.length){
+        actionsEl.hidden = true; feedbackEl.hidden = true; nextBtnEl.hidden = true;
+        doneEl.hidden = false;
+        document.getElementById('tfFinal').textContent = 'نتيجتك: ' + score + ' / ' + tfData.length;
+      } else { renderQ(); }
+    });
+    document.getElementById('tfRestart').addEventListener('click', function(){
+      i=0; score=0; renderQ();
+    });
+    renderQ();
+  })();
+
+  /* ---------- MCQ round ---------- */
+  (function(){
+    var i=0, score=0, answered=false;
+    var statementEl = document.getElementById('mcqStatement');
+    var optionsEl = document.getElementById('mcqOptions');
+    var feedbackEl = document.getElementById('mcqFeedback');
+    var nextBtnEl = document.getElementById('mcqNextBtn');
+    var doneEl = document.getElementById('mcqDone');
+    document.getElementById('mcqTotal').textContent = mcqData.length;
+
+    function renderQ(){
+      var q = mcqData[i];
+      answered = false;
+      document.getElementById('mcqIdx').textContent = i+1;
+      document.getElementById('mcqScore').textContent = score;
+      statementEl.textContent = q.q;
+      feedbackEl.hidden = true;
+      nextBtnEl.hidden = true;
+      doneEl.hidden = true;
+      optionsEl.innerHTML = '';
+      q.opts.forEach(function(opt, oi){
+        var b = document.createElement('button');
+        b.className = 'opt-btn';
+        b.textContent = opt;
+        b.setAttribute('data-oi', oi);
+        optionsEl.appendChild(b);
+      });
+    }
+    optionsEl.addEventListener('click', function(e){
+      var btn = e.target.closest('.opt-btn');
+      if(!btn || answered) return;
+      answered = true;
+      var oi = parseInt(btn.getAttribute('data-oi'),10);
+      var q = mcqData[i];
+      var ok = oi === q.correct;
+      Array.prototype.forEach.call(optionsEl.querySelectorAll('.opt-btn'), function(b,bi){
+        b.disabled = true;
+        if(bi === q.correct){ b.classList.add('correct'); }
+        else if(bi === oi){ b.classList.add('wrong'); }
+      });
+      if(ok) score++;
+      document.getElementById('mcqScore').textContent = score;
+      feedbackEl.hidden = false;
+      feedbackEl.className = 'quiz-feedback ' + (ok ? 'ok':'bad');
+      feedbackEl.innerHTML = (ok ? '✅ إجابة صحيحة!' : '❌ إجابة غير صحيحة') + '<span class="why">'+q.why+'</span>';
+      nextBtnEl.hidden = false;
+    });
+    nextBtnEl.addEventListener('click', function(){
+      i++;
+      if(i >= mcqData.length){
+        optionsEl.innerHTML=''; feedbackEl.hidden = true; nextBtnEl.hidden = true;
+        doneEl.hidden = false;
+        document.getElementById('mcqFinal').textContent = 'نتيجتك: ' + score + ' / ' + mcqData.length;
+      } else { renderQ(); }
+    });
+    document.getElementById('mcqRestart').addEventListener('click', function(){
+      i=0; score=0; renderQ();
+    });
+    renderQ();
+  })();
+
+  /* ---------- flashcards round ---------- */
+  (function(){
+    var i=0;
+    var card = document.getElementById('flashCard');
+    var defEl = document.getElementById('flashDef');
+    var termEl = document.getElementById('flashTerm');
+    document.getElementById('flashTotal').textContent = flashData.length;
+
+    function renderCard(){
+      card.classList.remove('flipped');
+      var q = flashData[i];
+      defEl.textContent = q.def;
+      termEl.textContent = q.term;
+      document.getElementById('flashIdx').textContent = i+1;
+    }
+    document.getElementById('flashFlipBtn').addEventListener('click', function(){
+      card.classList.toggle('flipped');
+    });
+    document.getElementById('flashNextBtn').addEventListener('click', function(){
+      i = (i+1) % flashData.length;
+      renderCard();
+    });
+    renderCard();
+  })();
+
+  render();
+
+  /* hot reload support for open viewers */
+  function boot(){ render(); }
+  if(window.claude && window.claude.hot){
+    window.claude.hot.ready ? window.claude.hot.ready(boot) : boot();
+  }
+})();
+</script>
+</body>
+</html>
