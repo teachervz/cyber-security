@@ -50,6 +50,7 @@
 
   *{box-sizing:border-box;}
   [hidden]{ display:none !important; }
+  html{ font-size:19px; }
   body{ background:var(--bg); }
   #app{
     min-height:100dvh;
@@ -142,7 +143,7 @@
     font-weight:800; padding:14px 30px; border-radius:999px; font-size:clamp(1.05rem,2.2vw,1.4rem);
     box-shadow:var(--shadow); position:relative; z-index:2; text-align:center;
   }
-  
+ 
   .cmap-branch{
     background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px 18px;
     min-width:150px; max-width:270px; flex:1 1 200px; box-shadow:var(--shadow); cursor:pointer;
@@ -261,8 +262,10 @@
     .scoreboard{ inset-inline-start:8px; width:190px; padding:10px; }
   }
 </style>
+
 </head>
 <body>
+
 <div id="app" dir="rtl" lang="ar">
 
   <header class="topbar">
@@ -863,15 +866,14 @@
   });
 
   /* ---------- font size control ---------- */
-  var appEl = document.getElementById('app');
-  var scale = 1;
+  var rootFontPx = 19;
   document.getElementById('fontUp').addEventListener('click', function(){
-    scale = Math.min(1.35, scale + 0.08);
-    appEl.style.fontSize = scale + 'em';
+    rootFontPx = Math.min(30, rootFontPx + 2);
+    document.documentElement.style.fontSize = rootFontPx + 'px';
   });
   document.getElementById('fontDown').addEventListener('click', function(){
-    scale = Math.max(0.8, scale - 0.08);
-    appEl.style.fontSize = scale + 'em';
+    rootFontPx = Math.max(15, rootFontPx - 2);
+    document.documentElement.style.fontSize = rootFontPx + 'px';
   });
 
   /* ---------- fullscreen ---------- */
@@ -1088,5 +1090,6 @@
   }
 })();
 </script>
+
 </body>
 </html>
